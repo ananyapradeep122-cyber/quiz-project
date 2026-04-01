@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, rgba(255, 144, 79, 0.24), transparent 32%),
+                        radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.26), transparent 28%),
+                        linear-gradient(135deg, #14192d 0%, #0f1222 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f8fbff;
+            padding: 1.5rem;
+        }
+
+        .container {
+            width: min(760px, 100%);
+            padding: 2rem;
+            background: rgba(16, 23, 46, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 32px;
+            box-shadow: 0 32px 90px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            font-size: clamp(2rem, 4vw, 3rem);
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        .progress {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff80b5 0%, #9089fc 100%);
+            transition: width 0.5s ease;
+        }
+
+        .progress-label {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            white-space: nowrap;
+        }
+
+        .card {
+            padding: 1.75rem;
+            border-radius: 24px;
+            background: rgba(10, 15, 32, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .login-state {
+            display: grid;
+            gap: 1rem;
+            justify-items: center;
+            text-align: center;
+        }
+
+        #nameInput {
+            width: 100%;
+            max-width: 420px;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        #nameInput:focus {
+            border-color: rgba(144, 137, 252, 0.8);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .greeting {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: #d8d8ff;
+            opacity: 0.92;
+        }
+
+        .question {
+            margin: 0 0 1.4rem;
+            font-size: 1.3rem;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .option:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .option input {
+            appearance: none;
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .option input:checked {
+            border-color: transparent;
+            background: linear-gradient(135deg, #ff80b5 0%, #9089fc 100%);
+        }
+
+        .option span {
+            flex: 1;
+            font-size: 1rem;
+        }
+
+        .login-note {
+            font-size: 0.95rem;
+            color: rgba(248, 251, 255, 0.72);
+        }
+
+        .action-buttons {
+            display: grid;
+            gap: 0.85rem;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .action-button,
+        #submitButton,
+        #openLinkButton,
+        #copyLinkButton {
+            width: 100%;
+            padding: 1rem 1.1rem;
+            border: none;
+            border-radius: 999px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #ff80b5 0%, #9089fc 100%);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            box-shadow: 0 20px 40px rgba(144, 137, 252, 0.25);
+        }
+
+        .action-button:hover,
+        #submitButton:hover:not(:disabled),
+        #openLinkButton:hover,
+        #copyLinkButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 48px rgba(144, 137, 252, 0.32);
+        }
+
+        #submitButton:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        #submitButton:hover:not(:disabled),
+        #loginButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 48px rgba(144, 137, 252, 0.32);
+        }
+
+        #submitButton:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 1.25rem;
+            min-height: 2rem;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        #result.show {
+            opacity: 1;
+        }
+
+        .leaderboard {
+            margin-top: 1.5rem;
+        }
+
+        .leaderboard h2 {
+            margin: 0 0 1rem;
+            font-size: 1.1rem;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 0.95rem 1rem;
+            text-align: left;
+            color: #f8fbff;
+        }
+
+        .leaderboard-table th {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #c7d2fe;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .leaderboard-table tr:not(:last-child) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .leaderboard-table tr.highlight {
+            background: rgba(144, 137, 252, 0.14);
+        }
+
+        .share-link {
+            margin-top: 1.25rem;
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .share-link input {
+            width: 100%;
+            padding: 0.95rem 1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        #copyLinkButton {
+            width: fit-content;
+            padding: 0.9rem 1.2rem;
+            border: none;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        #copyLinkButton:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .footer {
+            margin-top: 1.6rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(248, 251, 255, 0.65);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz Challenge</h1>
+
+        <div class="card" id="loginCard">
+            <div class="login-state">
+                <p class="question">Choose your journey: create a personal quiz about you or play someone else's shared quiz.</p>
+                <input id="nameInput" type="text" placeholder="Enter your name" autocomplete="name">
+                <div class="action-buttons">
+                    <button class="action-button" id="startCreateButton">Create Quiz About Me</button>
+                    <button class="action-button" id="startPlayButton">Play Shared Quiz</button>
+                </div>
+                <p class="login-note">When you create a quiz, your selected answers are saved and the shared link lets others play against them.</p>
+            </div>
+        </div>
+
+        <div class="card hidden" id="tokenCard">
+            <div class="login-state">
+                <p class="question">Enter the creator's unique quiz token or link to play.</p>
+                <input id="tokenInput" type="text" placeholder="Creator quiz token or link">
+                <button id="openLinkButton">Open Shared Quiz</button>
+                <p class="login-note">A valid creator link looks like <code>/creator/{token}</code>.</p>
+            </div>
+        </div>
+
+        <div class="progress hidden" id="quizProgress">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-label" id="progressLabel">0 / 0</div>
+        </div>
+
+        <div class="card hidden" id="quizCard">
+            <div class="greeting" id="greeting"></div>
+            <div id="quiz"></div>
+            <button id="submitButton">Next</button>
+            <p id="result"></p>
+            <div class="share-link hidden" id="shareLinkSection">
+                <p class="login-note" id="shareHint"></p>
+                <input id="shareLinkInput" readonly>
+                <button id="copyLinkButton">Copy Link</button>
+            </div>
+            <div class="leaderboard hidden" id="leaderboardSection">
+                <h2>Leaderboard</h2>
+                <table class="leaderboard-table" id="leaderboardTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">Create a quiz once, share the unique link, and let others play by matching your answers.</div>
+    </div>
+
+    <script>
+        const loginCard = document.getElementById('loginCard');
+        const tokenCard = document.getElementById('tokenCard');
+        const quizCard = document.getElementById('quizCard');
+        const quizContainer = document.getElementById('quiz');
+        const resultElement = document.getElementById('result');
+        const progressFill = document.getElementById('progressFill');
+        const progressLabel = document.getElementById('progressLabel');
+        const submitButton = document.getElementById('submitButton');
+        const startCreateButton = document.getElementById('startCreateButton');
+        const startPlayButton = document.getElementById('startPlayButton');
+        const openLinkButton = document.getElementById('openLinkButton');
+        const nameInput = document.getElementById('nameInput');
+        const tokenInput = document.getElementById('tokenInput');
+        const greeting = document.getElementById('greeting');
+        const quizProgress = document.getElementById('quizProgress');
+        const leaderboardSection = document.getElementById('leaderboardSection');
+        const leaderboardTableBody = document.querySelector('#leaderboardTable tbody');
+        const shareLinkSection = document.getElementById('shareLinkSection');
+        const shareLinkInput = document.getElementById('shareLinkInput');
+        const shareHint = document.getElementById('shareHint');
+        const copyLinkButton = document.getElementById('copyLinkButton');
+
+        let username = '';
+        let questions = [];
+        let currentIndex = 0;
+        let answers = [];
+        let currentMode = '';
+        let creatorToken = '';
+
+        startCreateButton.addEventListener('click', () => beginMode('create'));
+        startPlayButton.addEventListener('click', () => {
+            currentMode = 'play';
+            loginCard.classList.add('hidden');
+            tokenCard.classList.remove('hidden');
+        });
+        openLinkButton.addEventListener('click', openSharedQuiz);
+        copyLinkButton.addEventListener('click', copyShareLink);
+        nameInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                beginMode(currentMode || 'create');
+            }
+        });
+        tokenInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                openSharedQuiz();
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('creatorToken') || urlParams.get('shareToken');
+        const creatorViewToken = getCreatorViewTokenFromPath();
+
+        if (creatorViewToken) {
+            beginCreatorPreview(creatorViewToken);
+        } else if (urlToken) {
+            loginCard.classList.add('hidden');
+            tokenCard.classList.remove('hidden');
+            tokenInput.value = urlToken;
+        }
+
+        function getCreatorViewTokenFromPath() {
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            if (pathParts.length === 3 && pathParts[0] === 'creator' && pathParts[1] === 'view') {
+                return pathParts[2];
+            }
+            return '';
+        }
+
+        function beginCreatorPreview(token) {
+            loginCard.classList.add('hidden');
+            tokenCard.classList.add('hidden');
+            quizCard.classList.remove('hidden');
+            quizProgress.classList.add('hidden');
+            resultElement.classList.remove('show');
+            leaderboardSection.classList.add('hidden');
+            shareLinkSection.classList.add('hidden');
+            currentMode = 'preview';
+            creatorToken = token;
+            fetch(`/creator/${token}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Creator quiz not found');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    greeting.textContent = `Creator quiz by ${data.creatorName}`;
+                    quizContainer.innerHTML = `
+                        <p class="question">This creator has saved answers for ${data.questionCount} questions.</p>
+                        <p class="login-note">Click below to play their quiz and compare your selections.</p>
+                    `;
+                    submitButton.textContent = 'Play Quiz';
+                    submitButton.disabled = false;
+                })
+                .catch(() => showError('Creator quiz link is invalid or not found.'));
+        }
+
+        function beginMode(mode) {
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('Please enter your name first.');
+                nameInput.focus();
+                return;
+            }
+            username = name;
+            currentMode = mode;
+            loginCard.classList.add('hidden');
+            tokenCard.classList.add('hidden');
+            quizCard.classList.remove('hidden');
+            resultElement.classList.remove('show');
+            leaderboardSection.classList.add('hidden');
+            shareLinkSection.classList.add('hidden');
+            quizProgress.classList.remove('hidden');
+            currentIndex = 0;
+            answers = [];
+
+            if (mode === 'create') {
+                greeting.textContent = `Hey ${username}, choose your own correct answers for this quiz.`;
+                submitButton.textContent = 'Save My Quiz';
+                fetch('/questions')
+                    .then(res => res.json())
+                    .then(data => {
+                        questions = data;
+                        if (!questions.length) {
+                            showError('No questions are available at the moment.');
+                            return;
+                        }
+                        updateProgress();
+                        showQuestion();
+                    })
+                    .catch(() => showError('Unable to load questions. Refresh to try again.'));
+            }
+        }
+
+        function openSharedQuiz() {
+            creatorToken = extractToken(tokenInput.value.trim());
+            if (!creatorToken) {
+                alert('Please enter a valid creator quiz token or link.');
+                tokenInput.focus();
+                return;
+            }
+            if (!nameInput.value.trim()) {
+                alert('Please enter your name before opening the shared quiz.');
+                nameInput.focus();
+                return;
+            }
+            username = nameInput.value.trim();
+            loginCard.classList.add('hidden');
+            tokenCard.classList.add('hidden');
+            quizCard.classList.remove('hidden');
+            quizProgress.classList.remove('hidden');
+            resultElement.classList.remove('show');
+            leaderboardSection.classList.add('hidden');
+            shareLinkSection.classList.add('hidden');
+            currentIndex = 0;
+            answers = [];
+            startPlayForToken(creatorToken);
+        }
+
+        function extractToken(value) {
+            if (!value) {
+                return '';
+            }
+            const match = value.match(/([a-zA-Z0-9\-]{8,})$/);
+            return match ? match[1] : '';
+        }
+
+        function startPlayForToken(token) {
+            currentMode = 'play';
+            fetch(`/creator/${token}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Invalid creator token');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    creatorToken = token;
+                    questions = data.questions;
+                    greeting.textContent = `Playing ${data.creatorName}'s quiz. Answer the questions to match their choices.`;
+                    submitButton.textContent = 'Next';
+                    updateProgress();
+                    showQuestion();
+                })
+                .catch(() => showError('Creator quiz link is invalid or not found.'));
+        }
+
+        function showQuestion() {
+            const q = questions[currentIndex];
+            quizContainer.innerHTML = `
+                <p class="question">${q.question}</p>
+                <div class="options">
+                    ${[q.option1, q.option2, q.option3, q.option4].map(option => `
+                        <label class="option">
+                            <input type="radio" name="ans" value="${option}">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            resultElement.classList.remove('show');
+            updateProgress();
+        }
+
+        function updateProgress() {
+            progressLabel.textContent = `${Math.min(currentIndex + 1, questions.length)} / ${questions.length}`;
+            progressFill.style.width = `${(currentIndex / Math.max(questions.length, 1)) * 100}%`;
+            submitButton.textContent = currentMode === 'create' && currentIndex === questions.length - 1 ? 'Save My Quiz' : currentMode === 'play' && currentIndex === questions.length - 1 ? 'Submit Answers' : 'Next';
+        }
+
+        submitButton.addEventListener('click', () => {
+            if (currentMode === 'preview') {
+                startPlayForToken(creatorToken);
+                return;
+            }
+            const selected = document.querySelector('input[name="ans"]:checked');
+            if (!selected) {
+                alert('Please choose an answer before continuing.');
+                return;
+            }
+            answers.push(selected.value);
+            currentIndex++;
+            if (currentIndex < questions.length) {
+                showQuestion();
+            } else {
+                currentMode === 'create' ? submitCreatorQuiz() : submitPlayerQuiz();
+            }
+        });
+
+        function submitCreatorQuiz() {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Saving...';
+            fetch('/creator', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: username, answers })
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Save failed');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    quizContainer.innerHTML = '<p class="question">Your personal quiz is saved!</p>';
+                    resultElement.innerHTML = `Share this unique creator link with friends:<br><strong>${window.location.origin}${data.shareUrl}</strong>`;
+                    resultElement.classList.add('show');
+                    shareHint.textContent = 'Share this link so others can play your quiz against your saved answers.';
+                    setShareLink(data.shareUrl);
+                    leaderboardSection.classList.add('hidden');
+                })
+                .catch(() => showError('Unable to save your quiz. Please try again.'))
+                .finally(() => {
+                    submitButton.disabled = false;
+                });
+        }
+
+        function submitPlayerQuiz() {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+            fetch(`/play/${creatorToken}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: username, answers })
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Play submission failed');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    quizContainer.innerHTML = '<p class="question">Quiz complete!</p>';
+                    resultElement.innerHTML = `You scored <strong>${data.score}/${data.total}</strong> against ${data.creatorName}'s answers. Your rank is <strong>#${data.rank}</strong>.`;
+                    resultElement.classList.add('show');
+                    shareHint.textContent = 'Copy your score link and compare with the leaderboard.';
+                    setShareLink(data.shareUrl);
+                    showLeaderboard(data.leaderboard, data.playerName);
+                })
+                .catch(() => showError('Unable to submit your answers. Please try again.'))
+                .finally(() => {
+                    submitButton.disabled = false;
+                });
+        }
+
+        function showError(message) {
+            quizContainer.innerHTML = `<p class="question">${message}</p>`;
+            submitButton.disabled = true;
+            quizProgress.classList.add('hidden');
+        }
+
+        function setShareLink(path) {
+            const fullUrl = `${window.location.origin}${path}`;
+            shareLinkInput.value = fullUrl;
+            shareLinkSection.classList.remove('hidden');
+        }
+
+        function copyShareLink() {
+            navigator.clipboard.writeText(shareLinkInput.value).then(() => {
+                copyLinkButton.textContent = 'Copied!';
+                setTimeout(() => copyLinkButton.textContent = 'Copy Link', 1500);
+            });
+        }
+
+        function showLeaderboard(entries, playerName) {
+            leaderboardTableBody.innerHTML = entries.map((entry, index) => `
+                <tr class="${entry.name === playerName ? 'highlight' : ''}">
+                    <td>${index + 1}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.score}</td>
+                </tr>
+            `).join('');
+            leaderboardSection.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
