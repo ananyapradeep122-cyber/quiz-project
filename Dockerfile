@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -X
 
 FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
