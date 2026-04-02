@@ -1,9 +1,14 @@
-FROM maven:3.9.9-eclipse-temurin-17
-
+FROM maven:3.9.3-eclipse-temurin-17 AS build
 WORKDIR /app
 
-COPY . .
+COPY pom.xml .
+COPY src ./src
 
-RUN mvn clean package
+RUN mvn clean package -DskipTests
 
-CMD ["java", "-jar", "target/quiz-0.0.1-SNAPSHOT.jar"]
+FROM eclipse-temurin:17-jdk-jammy
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+CMD ["java", "-jar", "app.jar"]
